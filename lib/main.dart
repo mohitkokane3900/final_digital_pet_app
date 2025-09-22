@@ -19,6 +19,8 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
   int hunger = 50;
   int energy = 60;
 
+  String moodText = "Neutral 😐";
+
   final TextEditingController _nameCtrl = TextEditingController();
   Timer? hungerTimer;
 
@@ -29,8 +31,10 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
       if (!nameSet) return;
       setState(() {
         hunger = (hunger + 5).clamp(0, 100);
+        _recomputeMood();
       });
     });
+    _recomputeMood();
   }
 
   @override
@@ -45,6 +49,7 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
       happiness = (happiness + 10).clamp(0, 100);
       hunger = (hunger + 5).clamp(0, 100);
       energy = (energy - 10).clamp(0, 100);
+      _recomputeMood();
     });
   }
 
@@ -52,7 +57,24 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     setState(() {
       hunger = (hunger - 10).clamp(0, 100);
       energy = (energy + 5).clamp(0, 100);
+      _recomputeMood();
     });
+  }
+
+  void _recomputeMood() {
+    if (happiness > 70) {
+      moodText = "Happy 😊";
+    } else if (happiness >= 30) {
+      moodText = "Neutral 😐";
+    } else {
+      moodText = "Unhappy 😢";
+    }
+  }
+
+  Color _moodColor(int happinessLevel) {
+    if (happinessLevel > 70) return Colors.green;
+    if (happinessLevel >= 30) return Colors.yellow;
+    return Colors.red;
   }
 
   @override
@@ -100,26 +122,42 @@ class _DigitalPetAppState extends State<DigitalPetApp> {
     return Scaffold(
       appBar: AppBar(title: const Text("Digital Pet")),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.pets, size: 100),
-            const SizedBox(height: 16),
-            Text("Name: $petName", style: const TextStyle(fontSize: 18)),
-            const SizedBox(height: 4),
-            Text("Happiness: $happiness"),
-            Text("Hunger: $hunger"),
-            Text("Energy: $energy"),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                ElevatedButton(onPressed: _play, child: const Text("Play")),
-                const SizedBox(width: 12),
-                ElevatedButton(onPressed: _feed, child: const Text("Feed")),
-              ],
-            ),
-          ],
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ColorFiltered(
+                colorFilter: ColorFilter.mode(
+                  _moodColor(happiness),
+                  BlendMode.modulate,
+                ),
+                child: Image.asset(
+                  'assets/pet.png',
+                  width: 140,
+                  height: 140,
+                  fit: BoxFit.contain,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text("Name: $petName", style: const TextStyle(fontSize: 18)),
+              const SizedBox(height: 4),
+              Text("Mood: $moodText", style: const TextStyle(fontSize: 18)),
+              const SizedBox(height: 12),
+              Text("Happiness: $happiness"),
+              Text("Hunger: $hunger"),
+              Text("Energy: $energy"),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton(onPressed: _play, child: const Text("Play")),
+                  const SizedBox(width: 12),
+                  ElevatedButton(onPressed: _feed, child: const Text("Feed")),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
